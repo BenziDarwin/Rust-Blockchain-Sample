@@ -1,21 +1,28 @@
-use crate::blockchain::Blockchain;
-use crate::transaction::Transaction;
-
 mod blockchain;
-mod block;
 mod transaction;
-mod consensus;
+mod merkle_tree;
+mod db;
+mod block;
+mod network;
+
+use network::start_server;
+use tokio;
 
 #[tokio::main]
-async fn main() {
-    let mut blockchain = Blockchain::new(4); // Example difficulty level
+async fn main() -> std::io::Result<()> {
+    // Start the server
+    tokio::spawn(async {
+        if let Err(e) = start_server().await {
+            eprintln!("Server error: {}", e);
+        }
+    });
 
-    let transactions = vec![
-        Transaction { from: "Alice".to_string(), to: "Bob".to_string(), amount: 10 },
-        Transaction { from: "Bob".to_string(), to: "Charlie".to_string(), amount: 20 },
-    ];
+    // You can also add additional code to run in the main function if needed
+    // Example: sending a test message
+    // network::send_message("CREATE_TRANSACTION sender1 receiver1 10.0").await.unwrap();
 
-    blockchain.add_block(transactions);
-
-    println!("{:?}", blockchain.chain);
+    // Keep the main function running
+    loop {
+        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+    }
 }
